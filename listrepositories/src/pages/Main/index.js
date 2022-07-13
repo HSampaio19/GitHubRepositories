@@ -1,15 +1,40 @@
-import { FaGithubAlt, FaPlus, FaSpinner } from 'react-icons/fa';
+import { FaPlus, FaSpinner, FaGithub } from 'react-icons/fa';
 import React, { Component } from 'react';
-import { Container, Form, SubmitButton } from './styles';
+import { Link } from 'react-router-dom';
+import { Form, SubmitButton, List } from './styles';
+import Container from '../../Components/Container/styles';
 
 import api from '../../services/api';
 
 export default class Main extends Component {
-  state = {
-    newRepo: '',
-    repositories: [],
-    loading: false,
-  };
+  constructor() {
+    super();
+    this.state = {
+      newRepo: '',
+      repositories: [],
+      loading: false,
+    };
+  }
+
+  // carrega os repositorios salvos no localStorage durante o carregamento da pagina
+  componentDidMount() {
+    const repositories = localStorage.getItem('Repositories');
+
+    if (repositories) {
+      this.setState({
+        repositories: JSON.parse(repositories),
+      });
+    }
+  }
+
+  // Salva os repositorios no localStorage caso haja alguma alteracao no estado antes de recarregar a pagina
+  componentDidUpdate(prevProps, prevState) {
+    const { repositories } = this.state;
+
+    if (prevState !== repositories) {
+      localStorage.setItem('Repositories', JSON.stringify(repositories));
+    }
+  }
 
   handleInputChange = e => {
     this.setState({ newRepo: e.target.value });
@@ -33,16 +58,14 @@ export default class Main extends Component {
       newRepo: '',
       loading: false,
     });
-
-    console.log(response);
   };
 
   render() {
-    const { newRepo, loading } = this.state;
+    const { newRepo, loading, repositories } = this.state;
     return (
       <Container>
         <h1>
-          <FaGithubAlt />
+          <FaGithub />
           Repositorios
         </h1>
         <Form onSubmit={this.handleSubmit}>
@@ -60,6 +83,16 @@ export default class Main extends Component {
             )}
           </SubmitButton>
         </Form>
+        <List>
+          {repositories.map(repository => (
+            <li key={repository.name}>
+              <span>{repository.name}</span>
+              <Link to={`/repository/${encodeURIComponent(repository.name)}`}>
+                Detalhes
+              </Link>
+            </li>
+          ))}
+        </List>
       </Container>
     );
   }
